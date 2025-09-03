@@ -21,13 +21,26 @@ function CryptoTable() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {data.map((coin) => (
-              <tr key={coin.id} className="odd:bg-gray-50 even:bg-white">
+              <tr
+                key={coin.id}
+                className="odd:bg-gray-50 even:bg-white transform transition duration-300 hover:bg-gray-100 hover:scale-[1.01]"
+              >
                 <td className="p-3 flex items-center gap-2 justify-center">
                   <img src={coin.image} alt={coin.name} className="w-6 h-6" />
                   {coin.name} ({coin.symbol.toUpperCase()})
                 </td>
-                <td>${coin.current_price.toLocaleString()}</td>
-                <td className={coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}>
+                <td
+                  className={`transition-colors duration-500 ${
+                    coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  ${coin.current_price.toLocaleString()}
+                </td>
+                <td
+                  className={`font-semibold transition-colors duration-500 ${
+                    coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
                   {coin.price_change_percentage_24h.toFixed(2)}%
                 </td>
                 <td>${coin.market_cap.toLocaleString()}</td>

@@ -1,16 +1,13 @@
+/* eslint-disable no-unused-vars */
 import { useTopCoinsQuery } from "../hooks/useTopCoinsQuery";
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-const colors = ["#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"];
-
 function CombinedChart() {
   const { data: topCoins, isLoading, error } = useTopCoinsQuery();
 
-  // Traer precios históricos solo para las primeras 4
   const coinIds = topCoins?.slice(0, 4).map((c) => c.id) || [];
-
   const { data: chartData } = useQuery({
     queryKey: ["chart", coinIds],
     queryFn: async () => {
@@ -35,6 +32,9 @@ function CombinedChart() {
     refetchInterval: 35000,
   });
 
+  // eslint-disable-next-line no-unused-vars
+  const colors = ["#16a34a", "#dc2626", "#3b82f6", "#f59e0b"];
+
   if (isLoading) return <p className="text-center mt-6">⏳ Cargando gráfico combinado...</p>;
   if (error) return <p className="text-center text-red-500">❌ Error al cargar gráfico</p>;
 
@@ -49,7 +49,19 @@ function CombinedChart() {
             <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
             <Legend />
             {coinIds.map((coin, i) => (
-              <Line key={coin} type="monotone" dataKey={coin} stroke={colors[i]} strokeWidth={2} dot={false} />
+              <Line
+                key={coin}
+                type="monotone"
+                dataKey={coin}
+                stroke={
+                  topCoins.find(c => c.id === coin).price_change_percentage_24h >= 0
+                    ? "#16a34a"
+                    : "#dc2626"
+                }
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={true}
+              />
             ))}
           </LineChart>
         </ResponsiveContainer>
