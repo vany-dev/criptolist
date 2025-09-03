@@ -2,33 +2,45 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-function CryptoSearch() {
-  const [query, setQuery] = useState(""); // lo que escribe el usuario
-  const [search, setSearch] = useState(""); // lo que se busca al dar click
+function SearchBar() {
+  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
 
-  // función para traer datos de la cripto
-  const fetchCoin = async () => {
-    const res = await axios.get(
-      `https://api.coingecko.com/api/v3/coins/markets`,
-      {
-        params: {
-          vs_currency: "usd",
-          ids: search.toLowerCase(), // CoinGecko requiere el id en minúsculas
-        },
-      }
-    );
-    return res.data;
-  };
+  // Traer la lista de todas las monedas para convertir symbol → id
+  const { data: allCoins } = useQuery({
+    queryKey: ["allCoins"],
+    queryFn: async () => {
+      const res = await axios.get("https://api.coingecko.com/api/v3/coins/list");
+      return res.data;
+    },
+  });
 
+  // Obtener datos de la cripto
   const { data, isFetching, error } = useQuery({
     queryKey: ["coin", search],
-    queryFn: fetchCoin,
-    enabled: !!search, // 🚀 solo ejecuta si hay búsqueda
+    queryFn: async () => {
+      if (!allCoins) return null;
+      const coinObj =
+        allCoins.find(
+          (c) =>
+            c.id.toLowerCase() === search.toLowerCase() ||
+            c.symbol.toLowerCase() === search.toLowerCase() ||
+            c.name.toLowerCase() === search.toLowerCase()
+        ) || null;
+
+      if (!coinObj) throw new Error("No se encontró la cripto");
+
+      const res = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${coinObj.id}`
+      );
+      return res.data;
+    },
+    enabled: !!search && !!allCoins, // solo activa si hay búsqueda y lista de monedas cargada
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSearch(query.trim()); // activa la búsqueda
+    setSearch(query.trim());
   };
 
   return (
@@ -38,7 +50,7 @@ function CryptoSearch() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar criptomoneda (ej: bitcoin, ethereum)"
+          placeholder="Buscar criptomoneda (ej: btc, doge, bitcoin)"
           className="p-2 w-64 bg-white border-2 border-purple-400 rounded-2xl"
         />
         <button
@@ -49,52 +61,33 @@ function CryptoSearch() {
         </button>
       </form>
 
-      {/* Estado de carga */}
       {isFetching && <p className="text-center">⏳ Buscando...</p>}
+      {error && <p className="text-center text-red-500">❌ {error.message}</p>}
 
-      {/* Error */}
-      {error && (
-        <p className="text-center text-red-500">
-          ❌ Ocurrió un error en la búsqueda
-        </p>
-      )}
-
-      {/* Resultado */}
-      {data && data.length > 0 && (
+      {data && (
         <div className="flex justify-center">
           <div className="w-64 p-4 bg-white rounded-2xl shadow-md text-center">
-            <img
-              src={data[0].image}
-              alt={data[0].name}
-              className="w-12 h-12 mx-auto mb-2"
-            />
+            <img src={data.image.small} alt={data.name} className="w-12 h-12 mx-auto mb-2" />
             <h2 className="text-lg font-bold">
-              {data[0].name} ({data[0].symbol.toUpperCase()})
+              {data.name} ({data.symbol.toUpperCase()})
             </h2>
             <p className="text-gray-700 text-lg">
-              💲 {data[0].current_price.toLocaleString()}
+              💲 {data.market_data.current_price.usd.toLocaleString()}
             </p>
             <span
               className={`block mt-2 font-semibold ${
-                data[0].price_change_percentage_24h >= 0
+                data.market_data.price_change_percentage_24h >= 0
                   ? "text-green-500"
                   : "text-red-500"
               }`}
             >
-              {data[0].price_change_percentage_24h.toFixed(2)}% (24h)
+              {data.market_data.price_change_percentage_24h.toFixed(2)}% (24h)
             </span>
           </div>
         </div>
-      )}
-
-      {/* Si no encuentra nada */}
-      {data && data.length === 0 && (
-        <p className="text-center text-gray-500">
-          ⚠️ No se encontró la criptomoneda "{search}"
-        </p>
       )}
     </section>
   );
 }
 
-export default CryptoSearch;
+export default SearchBar;
