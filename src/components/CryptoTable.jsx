@@ -1,22 +1,30 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 function CryptoTable() {
-  const [cryptos, setCryptos] = useState([]);
-
-  useEffect(() => {
-    axios
-      .get("https://api.coingecko.com/api/v3/coins/markets", {
+  const fetchCryptos = async () => {
+    const res = await axios.get(
+      "https://api.coingecko.com/api/v3/coins/markets",
+      {
         params: {
           vs_currency: "usd",
           order: "market_cap_desc",
           per_page: 10,
           page: 1,
         },
-      })
-      .then((res) => setCryptos(res.data))
-      .catch((err) => console.error(err));
-  }, []);
+      }
+    );
+    return res.data;
+  };
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["cryptos"],
+    queryFn: fetchCryptos,
+    refetchInterval: 30000, // 🔄 actualiza cada 30s
+  });
+
+  if (isLoading) return <p className="text-center">⏳ Cargando...</p>;
+  if (error) return <p className="text-center text-red-500">Error al cargar</p>;
 
   return (
     <section className="max-w-5xl mx-auto mt-12">
@@ -34,7 +42,7 @@ function CryptoTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {cryptos.map((coin) => (
+            {data.map((coin) => (
               <tr key={coin.id} className="odd:bg-gray-50 even:bg-white">
                 <td className="p-3 flex items-center gap-2 justify-center">
                   <img src={coin.image} alt={coin.name} className="w-6 h-6" />
