@@ -1,36 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { useTopCoinsQuery } from "../hooks/useTopCoinsQuery";
 
 function CryptoTable() {
-  const fetchCryptos = async () => {
-    const res = await axios.get(
-      "https://api.coingecko.com/api/v3/coins/markets",
-      {
-        params: {
-          vs_currency: "usd",
-          order: "market_cap_desc",
-          per_page: 10,
-          page: 1,
-        },
-      }
-    );
-    return res.data;
-  };
+  const { data, isLoading, error } = useTopCoinsQuery();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["cryptos"],
-    queryFn: fetchCryptos,
-    refetchInterval: 30000, // 🔄 actualiza cada 30s
-  });
-
-  if (isLoading) return <p className="text-center">⏳ Cargando...</p>;
-  if (error) return <p className="text-center text-red-500">Error al cargar</p>;
+  if (isLoading) return <p className="text-center mt-6">⏳ Cargando tabla...</p>;
+  if (error) return <p className="text-center text-red-500">❌ Error al cargar tabla</p>;
 
   return (
     <section className="max-w-5xl mx-auto mt-12">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        Top 10 Criptomonedas
-      </h2>
+      <h2 className="text-3xl font-bold text-center mb-6">Top 10 Criptomonedas</h2>
       <div className="overflow-x-auto rounded-2xl shadow-md">
         <table className="min-w-full border border-gray-200 text-center">
           <thead className="bg-purple-600 text-white">
@@ -49,13 +27,7 @@ function CryptoTable() {
                   {coin.name} ({coin.symbol.toUpperCase()})
                 </td>
                 <td>${coin.current_price.toLocaleString()}</td>
-                <td
-                  className={
-                    coin.price_change_percentage_24h >= 0
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }
-                >
+                <td className={coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}>
                   {coin.price_change_percentage_24h.toFixed(2)}%
                 </td>
                 <td>${coin.market_cap.toLocaleString()}</td>

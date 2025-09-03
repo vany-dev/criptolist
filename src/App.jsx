@@ -12,7 +12,7 @@ function App() {
         <CardList />
         <SearchBar />
         <CryptoTable />
-        <CombinedChart /> {/* 🚀 Gráfico combinado */}
+        <CombinedChart />
       </main>
     </>
   );
