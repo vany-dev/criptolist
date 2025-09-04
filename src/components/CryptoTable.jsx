@@ -6,6 +6,8 @@ function CryptoTable() {
   if (isLoading) return <p className="text-center mt-6">⏳ Cargando tabla...</p>;
   if (error) return <p className="text-center text-red-500">❌ Error al cargar tabla</p>;
 
+  const coins = Array.isArray(data) ? data : data?.data || [];
+
   return (
     <section className="max-w-5xl mx-auto mt-12">
       <h2 className="text-3xl font-bold text-center mb-6">Top 10 Criptomonedas</h2>
@@ -20,7 +22,7 @@ function CryptoTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {data.map((coin) => (
+            {coins.map((coin) => (
               <tr
                 key={coin.id}
                 className="odd:bg-gray-50 even:bg-white transform transition duration-300 hover:bg-gray-100 hover:scale-[1.01]"

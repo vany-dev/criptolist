@@ -6,7 +6,9 @@ function CardList() {
   if (isLoading) return <p className="text-center mt-6">⏳ Cargando criptos...</p>;
   if (error) return <p className="text-center text-red-500">❌ Error al cargar criptos</p>;
 
-  const top4 = data.slice(0, 4);
+  // Aseguramos que data sea un array
+  const coins = Array.isArray(data) ? data : data?.data || [];
+  const top4 = coins.slice(0, 4);
 
   return (
     <section className="max-w-5xl mx-auto p-4 bg-gray-50 text-gray-900 rounded-2xl shadow-md mt-6">
@@ -15,8 +17,8 @@ function CardList() {
         {top4.map((coin) => (
           <div
             key={coin.id}
-            className={`w-40 p-4 bg-white flex flex-col items-center justify-evenly rounded-2xl shadow-md
-                        transform transition duration-300 hover:-translate-y-1 hover:shadow-xl`}
+            className="w-40 p-4 bg-white flex flex-col items-center justify-evenly rounded-2xl shadow-md
+                        transform transition duration-300 hover:-translate-y-1 hover:shadow-xl"
           >
             <img src={coin.image} alt={coin.name} className="w-10 h-10 mb-2" />
             <h2 className="font-bold">{coin.symbol.toUpperCase()}</h2>
