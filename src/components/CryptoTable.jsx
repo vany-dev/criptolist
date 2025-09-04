@@ -8,6 +8,8 @@ function CryptoTable() {
 
   const coins = Array.isArray(data) ? data : data?.data || [];
 
+  console.log("Crypto table data:", data);
+
   return (
     <section className="max-w-5xl mx-auto mt-12">
       <h2 className="text-3xl font-bold text-center mb-6">Top 10 Criptomonedas</h2>
