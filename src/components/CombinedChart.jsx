@@ -62,7 +62,8 @@ const CombinedChart = () => {
               dot={(props) => {
                 const { cx, cy, index } = props;
                 const color = getDotColor(coin, index);
-                return <circle cx={cx} cy={cy} r={4} fill={color} stroke="#fff" strokeWidth={1} />;
+                // ⚡ Agregamos key único para cada punto
+                return <circle key={`${coin}-${index}`} cx={cx} cy={cy} r={4} fill={color} stroke="#fff" strokeWidth={1} />;
               }}
               activeDot={{ r: 6 }}
             />
