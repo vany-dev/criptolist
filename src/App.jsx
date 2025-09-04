@@ -3,6 +3,7 @@ import CardList from "./components/CardList";
 import SearchBar from "./components/SearchBar";
 import CryptoTable from "./components/CryptoTable";
 import CombinedChart from "./components/CombinedChart";
+import "./App.css";
 
 function App() {
   return (

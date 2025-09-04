@@ -44,7 +44,7 @@ function SearchBar() {
   };
 
   return (
-    <section className="max-w-5xl mx-auto p-6 mt-10 bg-gray-100/35 rounded-2xl shadow-md">
+    <section className="max-w-5xl mx-auto p-6 mt-10 bg-gray-50 rounded-2xl shadow-md">
       <form onSubmit={handleSubmit} className="flex gap-2 justify-center mb-6">
         <input
           type="text"
