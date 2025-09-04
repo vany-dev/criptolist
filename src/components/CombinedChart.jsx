@@ -1,73 +1,76 @@
-/* eslint-disable no-unused-vars */
-import { useTopCoinsQuery } from "../hooks/useTopCoinsQuery";
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { useTopCoinsQuery } from "../hooks/useTopCoinsQuery";
+import { useCoinChartQuery } from "../hooks/useCoinChartQuery";
 
-function CombinedChart() {
+const CombinedChart = () => {
   const { data: topCoins, isLoading, error } = useTopCoinsQuery();
-
   const coinIds = topCoins?.slice(0, 4).map((c) => c.id) || [];
-  const { data: chartData } = useQuery({
-    queryKey: ["chart", coinIds],
-    queryFn: async () => {
-      const results = await Promise.all(
-        coinIds.map(async (coin) => {
-          const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${coin}/market_chart`, {
-            params: { vs_currency: "usd", days: 7 },
-          });
-          return res.data.prices.map(([timestamp, price]) => ({
-            date: new Date(timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-            [coin]: price,
-          }));
-        })
+
+  const { data: chartData, isLoading: chartLoading } = useCoinChartQuery(coinIds);
+
+  if (isLoading || chartLoading) return <p className="text-center mt-6">⏳ Cargando gráfica...</p>;
+  if (error) return <p className="text-center text-red-500">❌ Error al cargar datos</p>;
+  if (!chartData || chartData.length === 0) return <p className="text-center text-gray-500">No hay datos para graficar</p>;
+
+  // Función para obtener color del punto según tendencia
+  const getDotColor = (coin, index) => {
+    if (index === 0) return "#16a34a"; // primer punto verde
+    return chartData[index][coin] >= chartData[index - 1][coin] ? "#16a34a" : "#dc2626";
+  };
+
+  // Tooltip personalizado
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border">
+          <p className="font-bold mb-1">Fecha: {label}</p>
+          {payload.map((p) => {
+            const coinData = topCoins.find(c => c.id === p.dataKey);
+            const today = p.value;
+            const index = chartData.findIndex(d => d.date === label);
+            const prev = index > 0 ? chartData[index - 1][p.dataKey] : today;
+            const change = today - prev;
+            return (
+              <p key={p.dataKey} className="font-semibold" style={{ color: change >= 0 ? "#16a34a" : "#dc2626" }}>
+                {coinData.symbol.toUpperCase()}: ${today.toFixed(2)} ({change >= 0 ? "↑" : "↓"} {Math.abs(change).toFixed(2)})
+              </p>
+            );
+          })}
+        </div>
       );
-
-      return results[0].map((_, idx) => ({
-        date: results[0][idx].date,
-        ...results.reduce((acc, r, i) => ({ ...acc, [coinIds[i]]: r[idx][coinIds[i]] }), {}),
-      }));
-    },
-    enabled: coinIds.length > 0,
-    refetchInterval: 35000,
-  });
-
-  // eslint-disable-next-line no-unused-vars
-  const colors = ["#16a34a", "#dc2626", "#3b82f6", "#f59e0b"];
-
-  if (isLoading) return <p className="text-center mt-6">⏳ Cargando gráfico combinado...</p>;
-  if (error) return <p className="text-center text-red-500">❌ Error al cargar gráfico</p>;
+    }
+    return null;
+  };
 
   return (
-    <section className="max-w-5xl mx-auto mt-12 p-4 bg-gray-100/35 rounded-2xl shadow-md">
-      <h2 className="text-3xl font-bold text-center mb-6">Tendencia últimas 7 días (Top 4)</h2>
-      {chartData && (
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
-            <Legend />
-            {coinIds.map((coin, i) => (
-              <Line
-                key={coin}
-                type="monotone"
-                dataKey={coin}
-                stroke={
-                  topCoins.find(c => c.id === coin).price_change_percentage_24h >= 0
-                    ? "#16a34a"
-                    : "#dc2626"
-                }
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={true}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      )}
-    </section>
+    <div className="bg-white p-4 rounded-2xl shadow-md mt-6">
+      <h2 className="text-xl font-bold mb-4">Evolución últimos 7 días (Top 4)</h2>
+
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={chartData}>
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          {coinIds.map((coin) => (
+            <Line
+              key={coin}
+              type="monotone"
+              dataKey={coin}
+              stroke="#7c3aed"      // línea base en morado
+              strokeWidth={2}
+              dot={(props) => {
+                const { cx, cy, index } = props;
+                const color = getDotColor(coin, index);
+                return <circle cx={cx} cy={cy} r={4} fill={color} stroke="#fff" strokeWidth={1} />;
+              }}
+              activeDot={{ r: 6 }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
-}
+};
 
 export default CombinedChart;
