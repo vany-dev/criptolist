@@ -6,9 +6,12 @@ function CryptoTable() {
   if (isLoading) return <p className="text-center mt-6">⏳ Cargando tabla...</p>;
   if (error) return <p className="text-center text-red-500">❌ Error al cargar tabla</p>;
 
+  // 🛡️ Blindaje: forzar a array o vacío
   const coins = Array.isArray(data) ? data : data?.data || [];
 
-  console.log("Crypto table data:", data);
+  if (!coins.length) {
+    return <p className="text-center text-gray-500">⚠️ No hay datos disponibles</p>;
+  }
 
   return (
     <section className="max-w-5xl mx-auto mt-12">
@@ -34,7 +37,7 @@ function CryptoTable() {
                   {coin.name} ({coin.symbol.toUpperCase()})
                 </td>
                 <td
-                  className={`transition-colors duration-500 ${
+                  className={`font-semibold transition-colors duration-500 ${
                     coin.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"
                   }`}
                 >
